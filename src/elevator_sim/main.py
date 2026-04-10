@@ -44,6 +44,7 @@ def run(
         output_dir=config.output_dir,
         run_id=run_id,
         num_elevators=config.num_elevators,
+        algorithm=config.algorithm
     ) as writer:
         passengers = sim.run(requests, writer)
 

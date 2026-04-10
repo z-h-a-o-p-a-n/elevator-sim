@@ -11,8 +11,8 @@ class LogWriter:
     """Writes per-run log files to output_dir.
 
     Files created:
-      <run_id>_positions.csv  — one row per tick, columns: time, E1, E2, ...
-      <run_id>_passengers.csv — one row per passenger with timing columns
+      <run_id>_<algorithm>_positions.csv  — one row per tick, columns: time, E1, E2, ...
+      <run_id>_<algorithm>_passengers.csv — one row per passenger with timing columns
     """
 
     def __init__(self, output_dir: str | Path, run_id: str, num_elevators: int, algorithm: str) -> None:

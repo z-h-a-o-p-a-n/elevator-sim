@@ -41,6 +41,9 @@ class Elevator:
     # Ticks spent in a non-idle state (moving or stopped at a floor)
     active_ticks: int = 0
 
+    # Total floors traveled (incremented each time the elevator moves one floor)
+    floors_traveled: int = 0
+
     @property
     def is_full(self) -> bool:
         return len(self.passengers) >= self.capacity
@@ -98,9 +101,11 @@ class Elevator:
         """Advance elevator one floor in its current direction."""
         if self.direction == Direction.UP:
             self.current_floor += 1
+            self.floors_traveled += 1
             self.state = ElevatorState.MOVING
         elif self.direction == Direction.DOWN:
             self.current_floor -= 1
+            self.floors_traveled += 1
             self.state = ElevatorState.MOVING
         else:
             self.state = ElevatorState.IDLE

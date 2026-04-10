@@ -86,10 +86,10 @@ Use the mock data generator to create synthetic request CSVs for testing.
 
 ```bash
 # Basic usage (uniform distribution, 100 records, 10 floors, 1000 ticks)
-uv run python -m elevator_sim.mock_data.generate
+uv run generate-mock
 
 # Full options
-uv run python -m elevator_sim.mock_data.generate \
+uv run generate-mock \
   --num-records 500 \
   --num-floors 60 \
   --num-ticks 2000 \
@@ -125,6 +125,55 @@ The `workday` distribution simulates a typical office building with three traffi
 - **Lunch (up)** (~47%, 10%) — passengers return from floor 1 to upper floors
 - **PM rush** (~80%, 30%) — passengers travel from upper floors to floor 1
 - **Background** (throughout the day, 15%) — random requests between any floors
+
+## Evaluate Algorithms
+
+Compare dispatch algorithms side-by-side against the same input file. Results are presented in a terminal table with all stats (wait time, total time, elevator utilization) plus simulation duration and total floors traveled.
+
+```bash
+# Compare all registered algorithms with shared config (default)
+uv run evaluate-algorithms input/mock_work_day.csv --floors 60 --elevators 4
+
+# Compare specific algorithms
+uv run evaluate-algorithms input/mock_work_day.csv --floors 60 --elevators 4 \
+  --algo nearest_car \
+  --algo round_robin
+
+# Compare the same algorithm with different parameter values
+uv run evaluate-algorithms input/mock_work_day.csv --floors 60 --elevators 4 \
+  --algo nearest_car \
+  --algo "nearest_car:direction_bonus=5.0"
+
+# Per-algo sim config overrides (e.g. give round_robin fewer elevators)
+uv run evaluate-algorithms input/sample_requests.csv --floors 60 \
+  --algo nearest_car \
+  --algo "round_robin:elevators=2"
+```
+
+### Options
+
+| Flag | Short | Description | Default |
+|---|---|---|---|
+| `--floors` | `-f` | Number of floors | `10` |
+| `--elevators` | `-e` | Number of elevators (shared baseline) | `3` |
+| `--capacity` | `-c` | Elevator capacity | `8` |
+| `--stop-ticks` | | Stop-tick penalty per boarding/exiting event | `0` |
+| `--algo` | | Algorithm spec (repeatable; see below) | all algorithms |
+
+### `--algo` spec format
+
+Each `--algo` value is `name` or `name:key=val,key=val,...`.
+
+Keys that match sim-config fields override that run's config:
+
+| Key | SimConfig field |
+|---|---|
+| `floors` | `num_floors` |
+| `elevators` | `num_elevators` |
+| `capacity` | `elevator_capacity` |
+| `stop_ticks` | `stop_ticks` |
+
+All other keys are passed as algorithm parameters (e.g. `direction_bonus` for `nearest_car`).
 
 ## Test
 

@@ -14,7 +14,7 @@ from elevator_sim.simulation import Simulation
 def _run_sim(requests: list[Request], config: SimConfig) -> list:
     sim = Simulation(config=config, algorithm=get_algorithm(config.algorithm))
     with tempfile.TemporaryDirectory() as tmpdir:
-        with LogWriter(tmpdir, "test", config.num_elevators) as writer:
+        with LogWriter(tmpdir, "test", config.num_elevators, config.algorithm) as writer:
             return sim.run(requests, writer)
 
 
