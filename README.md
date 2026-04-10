@@ -80,6 +80,52 @@ passenger1,1,51,0,0,50
 
 Statistics (min/max/avg/p95 for wait time and total time) are printed to stdout.
 
+## Generating Mock Data
+
+Use the mock data generator to create synthetic request CSVs for testing.
+
+```bash
+# Basic usage (uniform distribution, 100 records, 10 floors, 1000 ticks)
+uv run python -m elevator_sim.mock_data.generate
+
+# Full options
+uv run python -m elevator_sim.mock_data.generate \
+  --num-records 500 \
+  --num-floors 60 \
+  --num-ticks 2000 \
+  --distribution workday \
+  --output input/my_requests.csv \
+  --seed 42
+```
+
+### Options
+
+| Flag | Short | Description | Default |
+|---|---|---|---|
+| `--num-records` | `-n` | Number of passenger requests to generate | `100` |
+| `--num-floors` | `-f` | Number of floors in the building | `10` |
+| `--num-ticks` | `-t` | Total simulation ticks (time horizon) | `1000` |
+| `--distribution` | `-d` | Time distribution (see below) | `uniform` |
+| `--output` | `-o` | Output CSV file path | `output/mock_requests.csv` |
+| `--seed` | | Random seed for reproducibility | none |
+
+### Distributions
+
+| Distribution | Behavior |
+|---|---|
+| `uniform` | Requests spread evenly across all ticks |
+| `gaussian` | Requests clustered around the midpoint (σ = num_ticks / 6) |
+| `exponential` | Front-loaded — most requests early, decaying over time |
+| `workday` | Realistic office building pattern (see below) |
+
+The `workday` distribution simulates a typical office building with three traffic peaks:
+
+- **AM rush** (~10% into the day, 30% of requests) — passengers travel from floor 1 to upper floors
+- **Lunch (down)** (~40%, 15%) — passengers travel from upper floors to floor 1
+- **Lunch (up)** (~47%, 10%) — passengers return from floor 1 to upper floors
+- **PM rush** (~80%, 30%) — passengers travel from upper floors to floor 1
+- **Background** (throughout the day, 15%) — random requests between any floors
+
 ## Test
 
 ```bash
@@ -91,6 +137,7 @@ make test
 | Name | Description |
 |---|---|
 | `nearest_car` | Assigns passenger to the elevator with the lowest travel cost to their origin, factoring in current direction |
+| `round_robin` | Assigns the nth passenger to elevator n mod m (cycling through all elevators in order); skips assignment if the selected elevator is at capacity |
 
 New algorithms can be added by subclassing `BaseAlgorithm` in `src/elevator_sim/algorithms/` and registering in `REGISTRY`.
 
