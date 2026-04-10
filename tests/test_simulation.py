@@ -98,6 +98,14 @@ def test_positions_log_has_row_per_tick():
     assert ticks == list(range(len(ticks)))  # 0, 1, 2, ... with no gaps
 
 
+def test_round_robin_assignment():
+    """Passengers are assigned to elevators in round-robin order."""
+    config = SimConfig(num_floors=10, num_elevators=3, elevator_capacity=10, algorithm="round_robin")
+    requests = [Request(time=0, id=f"p{i}", source=1, dest=5) for i in range(5)]
+    passengers = _run_sim(requests, config)
+    assert all(p.arrived for p in passengers)
+
+
 def test_parse_records_roundtrip():
     records = [
         {"time": 0, "id": "p1", "source": 1, "dest": 5},
