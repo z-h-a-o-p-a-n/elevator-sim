@@ -123,7 +123,7 @@ def generate_records(
     records: list[tuple[int, str, int, int]] = []
 
     for i in range(num_records):
-        passenger_id = f"passenger{i + 1}"
+        passenger_id = "passenger_x"    #temp placeholder
 
         if distribution == "uniform":
             tick = _uniform_tick(num_ticks)
@@ -142,6 +142,15 @@ def generate_records(
         records.append((tick, passenger_id, src, dst))
 
     records.sort(key=lambda r: r[0])
+
+    # assign passenger ids incrementally
+    for i in range(num_records):
+        passenger_id = f"passenger{i + 1}"
+        tick = records[i][0]
+        src = records[i][2]
+        dst = records[i][3]
+        records[i] = (tick, passenger_id, src, dst)
+
     return records
 
 

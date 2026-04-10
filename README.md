@@ -73,7 +73,7 @@ time,E1,E2
 
 **`<run_id>_passengers.csv`** — per-passenger timing:
 ```
-passengerId,source,dest,start_time,board_elevator_time,exit_time
+passengerId,source,dest,start_time,board_time,exit_time
 passenger1,1,51,0,0,50
 ...
 ```
