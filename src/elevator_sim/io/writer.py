@@ -30,7 +30,7 @@ class LogWriter:
         self._pax_file = open(pax_path, "w", newline="")
         self._pax_writer = csv.writer(self._pax_file)
         self._pax_writer.writerow(
-            ["passengerId", "source", "dest", "elevator_id", "start_time", "board_time", "exit_time"]
+            ["passenger_id", "source", "dest", "elevator_id", "start_time", "board_time", "exit_time"]
         )
 
     def log_tick(self, tick: int, elevators: list[Elevator]) -> None:

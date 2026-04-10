@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -23,6 +24,7 @@ from .stats import (
 def run(
     requests: list[Request],
     config: SimConfig | None = None,
+    algo_config: dict | None = None,
     run_id: str | None = None,
 ) -> None:
     """Run the simulation programmatically.
@@ -30,6 +32,7 @@ def run(
     Args:
         requests: Parsed elevator requests (use parse_csv or parse_records).
         config:   Simulation configuration. Defaults to SimConfig().
+        algo_config: Algorithm configuration. Defaults to the value defined in SimConfig().
         run_id:   Log file prefix. Defaults to a timestamp string.
     """
     if config is None:
@@ -37,7 +40,12 @@ def run(
     if run_id is None:
         run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    algorithm = get_algorithm(config.algorithm, config[config.algorithm])
+    # if the algo configuration is not specified, use the default
+    if algo_config is None:
+        algorithm = get_algorithm(config, config[config.algorithm])
+    else:
+        algorithm = get_algorithm(config, algo_config)
+
     sim = Simulation(config=config, algorithm=algorithm)
 
     with LogWriter(
@@ -89,11 +97,10 @@ def main(argv: list[str] | None = None) -> None:
         help="Dispatch algorithm (default: nearest_car)",
     )
     parser.add_argument(
-        "--direction-bonus",
-        type=float,
-        default=0.0,
+        "--algo-config",
+        type=json.loads,
         metavar="N",
-        help="Score bonus for elevators already heading toward the passenger's origin (default: 0)",
+        help="A JSON of the algorithm configuration (i.e, {\"direction_bonus\": 0.0})",
     )
     parser.add_argument(
         "--output-dir",
@@ -118,6 +125,10 @@ def main(argv: list[str] | None = None) -> None:
         output_dir=args.output_dir,
         algorithm=args.algorithm
     )
+    if args.algo_config is not None:
+        algo_config = dict(args.algo_config)
+    else:
+        algo_config = None
 
     try:
         requests = parse_csv(args.input)
@@ -126,7 +137,7 @@ def main(argv: list[str] | None = None) -> None:
         sys.exit(1)
 
     run_id = args.run_id or datetime.now().strftime("%Y%m%d_%H%M%S")
-    run(requests, config=config, run_id=run_id)
+    run(requests, config=config, algo_config=algo_config, run_id=run_id)
 
 
 if __name__ == "__main__":

@@ -41,7 +41,7 @@ class Simulation:
                     destination=req.dest,
                     request_time=req.time,
                 )
-                elevator = self.algorithm.assign(passenger, self.elevators, self.config)
+                elevator = self.algorithm.assign(passenger, self.elevators)
                 if elevator is None:
                     # No elevator can be assigned at the moment, exit the loop wait for the next tick
                     # print("no assignable elevator at this time")

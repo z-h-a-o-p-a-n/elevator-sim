@@ -21,8 +21,23 @@ uv run elevator-sim requests.csv \
   --capacity 8 \
   --stop-ticks 0 \
   --algorithm nearest_car \
+  --algo-config '{"direction_bonus": 5.0}' \
   --output-dir output/ \
   --run-id my_run
+
+# Zone-based dispatch with custom zones
+uv run elevator-sim requests.csv \
+  --floors 100 \
+  --elevators 6 \
+  --algorithm zoned_dispatch \
+  --algo-config '{
+    "sub_algorithm": "nearest_car",
+    "zones": [
+      {"floors": [1, 33],   "elevator_ids": [1, 2]},
+      {"floors": [34, 66],  "elevator_ids": [3, 4]},
+      {"floors": [67, 100], "elevator_ids": [5, 6]}
+    ]
+  }'
 ```
 
 ### Input CSV format
@@ -73,7 +88,7 @@ time,E1,E2
 
 **`<run_id>_passengers.csv`** — per-passenger timing:
 ```
-passengerId,source,dest,start_time,board_time,exit_time
+passenger_id,source,dest,start_time,board_time,exit_time
 passenger1,1,51,0,0,50
 ...
 ```
@@ -175,20 +190,39 @@ Keys that match sim-config fields override that run's config:
 
 All other keys are passed as algorithm parameters (e.g. `direction_bonus` for `nearest_car`).
 
-## Test
-
-```bash
-make test
-```
-
 ## Algorithms
 
 | Name | Description |
 |---|---|
 | `nearest_car` | Assigns passenger to the elevator with the lowest travel cost to their origin, factoring in current direction |
 | `round_robin` | Assigns the nth passenger to elevator n mod m (cycling through all elevators in order); skips assignment if the selected elevator is at capacity |
+| `zoned_dispatch` | Divides the building into floor zones, each served by a dedicated set of elevators; cross-zone requests are handled by the origin zone |
+
+#### `zoned_dispatch` config
+
+Passed via `--algo-config` (JSON) or the `algo_config` argument in programmatic usage.
+
+| Key | Description | Default |
+|---|---|---|
+| `sub_algorithm` | Within-zone selection strategy: `"nearest_car"`, `"round_robin"`, or `"random"` | `"nearest_car"` |
+| `zones` | List of zone objects (see below) | `[]` |
+
+Each zone object:
+
+| Key | Description |
+|---|---|
+| `floors` | `[min_floor, max_floor]` — inclusive, 1-indexed |
+| `elevator_ids` | List of elevator IDs (1-indexed) serving this zone |
+
+If a passenger's origin floor falls outside all defined zones, they are not assigned until next tick.
 
 New algorithms can be added by subclassing `BaseAlgorithm` in `src/elevator_sim/algorithms/` and registering in `REGISTRY`.
+
+## Test
+
+```bash
+make test
+```
 
 ## Assumptions & Trade-offs
 
@@ -201,7 +235,6 @@ New algorithms can be added by subclassing `BaseAlgorithm` in `src/elevator_sim/
 
 ## What I'd Improve With More Time
 
-- Zone-based and round-robin dispatch algorithms
 - Express elevator support (skip floors)
 - Visualization (floor-by-floor animation or Gantt chart)
 - Benchmark suite to compare algorithms across traffic patterns

@@ -1,5 +1,7 @@
 """Nearest-car destination dispatch algorithm."""
 
+from elevator_sim.config import SimConfig
+
 from ..models.elevator import Direction, Elevator
 from ..models.passenger import Passenger
 from .base import BaseAlgorithm
@@ -20,8 +22,9 @@ class NearestCarAlgorithm(BaseAlgorithm):
             the passenger's origin. Defaults to 0 (disabled).
     """
 
-    def __init__(self, config: dict = {}) -> None:
-        self.direction_bonus = config.get("direction_bonus")
+    def __init__(self, config: SimConfig, algo_config = {}) -> None:
+        self._config = config
+        self.direction_bonus = algo_config.get("direction_bonus")
 
     def get_elevator(self, passenger: Passenger, elevators: list[Elevator]) -> Elevator:
         return min(elevators, key=lambda e: self._score(e, passenger))

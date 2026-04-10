@@ -25,4 +25,5 @@ def simple_requests() -> list[Request]:
 
 @pytest.fixture
 def sim(default_config: SimConfig) -> Simulation:
-    return Simulation(config=default_config, algorithm=get_algorithm("nearest_car"))
+    config = SimConfig(algorithm="nearest_car")
+    return Simulation(config=default_config, algorithm=get_algorithm(config))

@@ -19,4 +19,14 @@ class SimConfig:
                 return {
                     "direction_bonus": 0.0  # subtracted from score when elevator heads toward origin; 0 = disabled
                 }
+            case "zoned_dispatch":
+                return {
+                    "sub_algorithm": "nearest_car",  # "nearest_car" | "round_robin" | "random"
+                    "zones": [
+                        {"floors": [1, 50],  "elevator_ids": [1, 2]},
+                        {"floors": [51, 100], "elevator_ids": [3, 4]},
+                    ]
+                }
+            case _:
+                return {}
     

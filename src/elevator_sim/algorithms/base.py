@@ -9,13 +9,17 @@ from ..config import SimConfig
 
 
 class BaseAlgorithm(ABC):
-    def assign(self, passenger: Passenger, elevators: list[Elevator], config: SimConfig) -> Optional[Elevator]:
+    def __init__(self, config: SimConfig, algo_config: dict = {}) -> None:
+        self._config = config
+        self._algo_config = algo_config
+
+    def assign(self, passenger: Passenger, elevators: list[Elevator]) -> Optional[Elevator]:
         """Assign a passenger to an elevator.
 
         Called once per new passenger at the tick they submit their request.
         The returned elevator will have the passenger added to its assignment queue.
         """
-        eligible_elevators = list(filter(lambda e: len(e.assigned) + len(e.passengers) < config.elevator_capacity, elevators))
+        eligible_elevators = list(filter(lambda e: len(e.assigned) + len(e.passengers) < self._config.elevator_capacity, elevators))
         if len(eligible_elevators) == 0:
             return None
         return self.get_elevator(passenger, eligible_elevators)
