@@ -45,25 +45,25 @@ class TestNearestCarBasic:
         e1 = make_elevator(1, floor=1)
         e2 = make_elevator(2, floor=8)
         passenger = make_passenger(origin=7)
-        assert self.algo.get_elevator(passenger, [e1, e2]) is e2
+        assert self.algo.assign(passenger, [e1, e2]) is e2
 
     def test_single_elevator_always_chosen(self):
         e = make_elevator(1, floor=5)
         passenger = make_passenger(origin=3)
-        assert self.algo.get_elevator(passenger, [e]) is e
+        assert self.algo.assign(passenger, [e]) is e
 
     def test_tie_broken_by_load(self):
         """Equal distance → elevator with fewer committed passengers wins."""
         e1 = make_elevator(1, floor=3, passengers=2)
         e2 = make_elevator(2, floor=7, passengers=0)  # equidistant from floor 5
         passenger = make_passenger(origin=5)
-        assert self.algo.get_elevator(passenger, [e1, e2]) is e2
+        assert self.algo.assign(passenger, [e1, e2]) is e2
 
     def test_elevator_at_origin_floor(self):
         e1 = make_elevator(1, floor=5)
         e2 = make_elevator(2, floor=1)
         passenger = make_passenger(origin=5)
-        assert self.algo.get_elevator(passenger, [e1, e2]) is e1
+        assert self.algo.assign(passenger, [e1, e2]) is e1
 
 
 # ---------------------------------------------------------------------------
@@ -136,7 +136,7 @@ class TestNearestCarOvershoot:
         e1 = make_elevator(1, floor=3, direction=Direction.UP, destinations={5})
         e2 = make_elevator(2, floor=3, direction=Direction.UP, destinations={5, 9})
         p = make_passenger(origin=5)
-        assert self.algo.get_elevator(p, [e1, e2]) is e1
+        assert self.algo.assign(p, [e1, e2]) is e1
 
 
 # ---------------------------------------------------------------------------
@@ -152,7 +152,7 @@ class TestNearestCarDirectionBonus:
         e1 = make_elevator(1, floor=5, direction=Direction.IDLE)
         e2 = make_elevator(2, floor=3, direction=Direction.UP)
         p = make_passenger(origin=6)
-        assert algo.get_elevator(p, [e1, e2]) is e2
+        assert algo.assign(p, [e1, e2]) is e2
 
     def test_direction_bonus_not_applied_when_wrong_direction(self):
         cfg = make_config()
@@ -165,7 +165,7 @@ class TestNearestCarDirectionBonus:
         e2 = make_elevator(2, floor=8, direction=Direction.UP)  # going UP, origin=6 < 8, no bonus
         p = make_passenger(origin=6)
         # e2 distance = |8-6| = 2, e1 distance = |5-6| = 1 → e1 wins (closer, no bonus changes that)
-        assert algo.get_elevator(p, [e1, e2]) is e1
+        assert algo.assign(p, [e1, e2]) is e1
 
     def test_no_direction_bonus_when_not_configured(self):
         cfg = make_config()
@@ -174,7 +174,7 @@ class TestNearestCarDirectionBonus:
         e2 = make_elevator(2, floor=3, direction=Direction.UP)
         p = make_passenger(origin=6)
         # e1 distance=1, e2 distance=3 → e1 wins regardless
-        assert algo.get_elevator(p, [e1, e2]) is e1
+        assert algo.assign(p, [e1, e2]) is e1
 
 
 # ---------------------------------------------------------------------------
@@ -238,26 +238,8 @@ class TestZonedDispatchZoneRouting:
         assert result is not None
         assert result.id in {3, 4}
 
-    def test_origin_outside_all_zones_returns_none(self):
-        algo = make_zone_algo()
-        elevators = make_zone_elevators()
-        p = make_passenger(origin=25, destination=30)
-        result = algo.assign(p, elevators)
-        assert result is None
-
 
 class TestZonedDispatchCapacity:
-    def test_returns_none_when_zone_elevators_full(self):
-        algo = make_zone_algo()
-        elevators = make_zone_elevators()
-        # Fill zone 1 elevators to capacity (capacity=4)
-        for e in elevators:
-            if e.id in {1, 2}:
-                e.passengers = [object()] * 4  # type: ignore[list-item]
-        p = make_passenger(origin=5, destination=9)
-        result = algo.assign(p, elevators)
-        assert result is None
-
     def test_skips_full_elevator_in_zone(self):
         algo = make_zone_algo()
         elevators = make_zone_elevators()
@@ -297,9 +279,95 @@ class TestZonedDispatchSubAlgorithms:
         assert result is not None
         assert result.id in {3, 4}
 
-    def test_get_elevator_raises(self):
-        algo = make_zone_algo()
-        elevators = make_zone_elevators()
-        p = make_passenger(origin=5)
-        with pytest.raises(NotImplementedError):
-            algo.get_elevator(p, elevators)
+
+# ---------------------------------------------------------------------------
+# ZonedDispatchAlgorithm – overlapping zones
+# Zones: 0=[1-15] elevators {1,2}, 1=[10-20] elevators {3,4}
+# Overlap region: floors 10-15
+# ---------------------------------------------------------------------------
+
+OVERLAP_ZONE_CONFIG = {
+    "sub_algorithm": "nearest_car",
+    "zones": [
+        {"floors": [1, 15], "elevator_ids": [1, 2]},
+        {"floors": [10, 20], "elevator_ids": [3, 4]},
+    ],
+}
+
+
+def make_overlap_algo() -> ZonedDispatchAlgorithm:
+    cfg = SimConfig(num_floors=20, num_elevators=4, elevator_capacity=4, stop_ticks=0)
+    return ZonedDispatchAlgorithm(cfg, algo_config=OVERLAP_ZONE_CONFIG)
+
+
+def make_overlap_elevators() -> list[Elevator]:
+    return [
+        make_elevator(1, floor=1, capacity=4),
+        make_elevator(2, floor=8, capacity=4),
+        make_elevator(3, floor=10, capacity=4),
+        make_elevator(4, floor=18, capacity=4),
+    ]
+
+
+class TestZonedDispatchOverlappingZones:
+    def test_destination_only_in_zone0_uses_zone0(self):
+        """Destination in non-overlapping part of zone 0 → zone 0 elevators."""
+        algo = make_overlap_algo()
+        elevators = make_overlap_elevators()
+        p = make_passenger(origin=3, destination=5)
+        result = algo.assign(p, elevators)
+        assert result.id in {1, 2}
+
+    def test_destination_only_in_zone1_uses_zone1(self):
+        """Destination in non-overlapping part of zone 1 → zone 1 elevators."""
+        algo = make_overlap_algo()
+        elevators = make_overlap_elevators()
+        p = make_passenger(origin=18, destination=17)
+        result = algo.assign(p, elevators)
+        assert result.id in {3, 4}
+
+    def test_destination_in_overlap_origin_in_zone0_only_uses_zone0(self):
+        """Destination in overlap, origin only in zone 0 → zone 0 covers both."""
+        algo = make_overlap_algo()
+        elevators = make_overlap_elevators()
+        p = make_passenger(origin=5, destination=12)  # origin 5 only in zone 0
+        result = algo.assign(p, elevators)
+        assert result.id in {1, 2}
+
+    def test_destination_in_overlap_origin_in_zone1_only_uses_zone1(self):
+        """Destination in overlap, origin only in zone 1 → zone 1 covers both."""
+        algo = make_overlap_algo()
+        elevators = make_overlap_elevators()
+        p = make_passenger(origin=18, destination=12)  # origin 18 only in zone 1
+        result = algo.assign(p, elevators)
+        assert result.id in {3, 4}
+
+    def test_destination_in_overlap_origin_also_in_overlap_uses_first_match(self):
+        """Both origin and destination in overlap → both zones qualify; first zone wins."""
+        algo = make_overlap_algo()
+        elevators = make_overlap_elevators()
+        p = make_passenger(origin=11, destination=13)  # both in overlap
+        result = algo.assign(p, elevators)
+        assert result.id in {1, 2}  # zone 0 is first
+
+    def test_find_zone_destination_in_overlap_origin_zone0(self):
+        """Direct _find_zone check: origin in zone 0 only → returns zone 0 index."""
+        cfg = SimConfig(num_floors=20, num_elevators=4, elevator_capacity=4, stop_ticks=0)
+        algo = ZonedDispatchAlgorithm(cfg, algo_config=OVERLAP_ZONE_CONFIG)
+        idx, zone = algo._find_zone(origin=5, destination=12)
+        assert idx == 0
+
+    def test_find_zone_destination_in_overlap_origin_zone1(self):
+        """Direct _find_zone check: origin in zone 1 only → returns zone 1 index."""
+        cfg = SimConfig(num_floors=20, num_elevators=4, elevator_capacity=4, stop_ticks=0)
+        algo = ZonedDispatchAlgorithm(cfg, algo_config=OVERLAP_ZONE_CONFIG)
+        idx, zone = algo._find_zone(origin=18, destination=12)
+        assert idx == 1
+
+    def test_find_zone_no_match_returns_none(self):
+        """Destination outside all zones → returns (−1, None)."""
+        cfg = SimConfig(num_floors=20, num_elevators=4, elevator_capacity=4, stop_ticks=0)
+        algo = ZonedDispatchAlgorithm(cfg, algo_config=OVERLAP_ZONE_CONFIG)
+        idx, zone = algo._find_zone(origin=5, destination=25)
+        assert idx == -1
+        assert zone is None

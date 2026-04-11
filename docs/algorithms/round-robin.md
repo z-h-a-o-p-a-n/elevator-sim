@@ -2,20 +2,18 @@
 
 ## Summary
 
-Passengers are assigned to elevators in strict rotation. The nth passenger is sent to elevator at position `n mod m` in the eligible elevator list, where `m` is the number of elevators. The counter increments with every assignment attempt, regardless of whether the selected elevator accepts the passenger.
+Passengers are assigned to elevators in strict rotation. The nth passenger is sent to elevator at position `n mod m` in the eligible elevator list, where `m` is the number of elevators. The counter increments with every assignment attempt.
 
 ---
 
-## Behaviour
+## Behavior
 
 A single global counter starts at 0 and never resets. On each call to `get_elevator`:
 
 1. Compute `index = counter mod m` where `m = len(elevators)`.
 2. Select `elevators[index]`.
 3. Increment the counter.
-4. If the selected elevator is at capacity, return `None` — the base class will retry next tick.
-
-Because the counter advances unconditionally, a capacity rejection still increments the counter. The next passenger will be offered the *next* elevator in the rotation, not the same one again.
+4. Retuurn the selected elevator.
 
 ---
 
@@ -23,7 +21,6 @@ Because the counter advances unconditionally, a capacity rejection still increme
 
 - **No travel-cost awareness.** The algorithm ignores elevator positions, directions, and load. A passenger may be assigned to an elevator at the opposite end of the building when an idle elevator is one floor away.
 - **Counter never resets.** The rotation is global across the entire simulation run. There is no per-tick or per-group reset.
-- **Capacity rejection skips the slot.** When the selected elevator is full, no fallback elevator is tried — the passenger waits until the next tick, at which point the counter has already moved on.
 
 Round-robin is best used as a baseline or as a sub-algorithm inside `ZonedDispatchAlgorithm`, where the elevator pool is already constrained to a relevant subset.
 

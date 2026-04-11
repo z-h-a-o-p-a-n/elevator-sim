@@ -68,7 +68,8 @@ class Elevator:
         for p in arrived:
             self.passengers.remove(p)
             p.arrive_time = tick
-        self.destinations.discard(self.current_floor)
+        if not any(p.origin == self.current_floor for p in self.assigned):
+            self.destinations.discard(self.current_floor)
         return arrived
 
     def board(self, tick: int) -> list[Passenger]:

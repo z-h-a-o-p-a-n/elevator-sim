@@ -32,9 +32,8 @@ class Simulation:
         tick = 0
 
         while True:
-            # 1. Release requests arriving at this tick (no peeking ahead), as well as requests that
-            # were not processed previously due to the lack of capacity.
-            while next_request_idx < len(pending) and pending[next_request_idx].time <= tick:
+            # 1. Release requests arriving at this tick (no peeking ahead).
+            while next_request_idx < len(pending) and pending[next_request_idx].time == tick:
                 req = pending[next_request_idx]
 
                 self._sanity_check_req(req)
@@ -46,14 +45,9 @@ class Simulation:
                     request_time=req.time,
                 )
                 elevator = self.algorithm.assign(passenger, self.elevators)
-                if elevator is None:
-                    # No elevator can be assigned at the moment, exit the loop wait for the next tick
-                    logger.debug("no assignable elevator at this time")
-                    break
-                else:
-                    self.passengers.append(passenger)
-                    elevator.assign(passenger)
-                    next_request_idx += 1
+                self.passengers.append(passenger)
+                elevator.assign(passenger)
+                next_request_idx += 1
 
             # 2. Log positions at start of tick (before movement)
             writer.log_tick(tick, self.elevators)

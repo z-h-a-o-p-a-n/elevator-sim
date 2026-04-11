@@ -2,7 +2,8 @@
 
 ## Summary
 
-Each new passenger is assigned to the elevator with the **lowest cost score**. The score estimates how many floors the elevator must travel before it can pick up the passenger, with adjustments for direction alignment and committed overshoot. Lower score is better. Ties are broken by current load.
+Each new passenger is assigned to the elevator with the **lowest cost score**. The score estimates how many floors the elevator must travel before it can pick up the passenger, with adjustments for direction alignment and committed overshoot. Lower score is better. Ties are broken by current load. If the current loads are equal, 
+the elevator with lower number wins.
 
 ---
 
@@ -43,7 +44,7 @@ direction_bonus = −direction_bonus_config   (when heading toward origin)
                   0                          (otherwise)
 ```
 
-When enabled (`direction_bonus > 0` in config), a bonus is subtracted from the score for elevators already travelling toward the passenger's origin floor. This favours elevators that can pick up the passenger en route without reversing.
+When enabled (`direction_bonus > 0` in config), a bonus is subtracted from the score for elevators already travelling toward the passenger's origin floor. This favors elevators that can pick up the passenger en route without reversing.
 
 The bonus is disabled by default (`direction_bonus = 0`).
 
@@ -120,4 +121,4 @@ Elevator 2 wins despite being further away, because Elevator 1 must first travel
 
 ## Usage as a sub-algorithm
 
-`NearestCarAlgorithm` exposes `get_elevator(passenger, elevators)` separately from the capacity-filtering `assign()` wrapper. This allows other algorithms (e.g. `ZonedDispatchAlgorithm`) to reuse the scoring logic on a pre-filtered subset of elevators without duplicating the selection logic.
+`NearestCarAlgorithm` can be re-used by other algorithms (e.g. `ZonedDispatchAlgorithm`) without duplicating the selection logic.

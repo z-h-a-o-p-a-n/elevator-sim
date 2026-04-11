@@ -14,71 +14,69 @@ One **tick** equals one floor of travel. An elevator that is moving advances exa
 | `algorithm: BaseAlgorithm` | Dispatch algorithm that assigns passengers to elevators |
 | `config: SimConfig` | Number of floors, number of elevators, elevator capacity, stop-tick penalty |
 
-Requests are sorted ascending by timestamp at the start of the run. The simulation does not peek ahead — a request is only visible to the algorithm on or after its timestamp tick.
+Requests are sorted ascending by timestamp at the start of the run. The simulation _does not_ peek ahead — a request is only visible to the algorithm on or after its timestamp tick.
 
 ---
 
-## Per-tick structure
+## Pseudo Code
 
 ```
 tick 0, 1, 2, ...
 │
-├─ 1. Release requests
-├─ 2. Log positions
-├─ 3. Per-elevator processing
-│   ├─ a. Count active ticks
-│   ├─ b. Stop countdown (skip move if still stopped)
+├─ 1. Fetch the requests for the current tick
+├─ 2. Log elevator positions
+├─ 3. For each elevator:
+│   ├─ a. Tracking the total time this elevator had traveled
+│   ├─ b. (Optional) Wait for passengers to exit and board at the current floor
 │   ├─ c. Exit passengers at current floor
 │   ├─ d. Board assigned passengers at current floor
 │   ├─ e. Log arrived passengers
-│   ├─ f. Apply stop penalty (if boarding or exiting occurred)
-│   ├─ g. Set direction
-│   └─ h. Move
+│   ├─ f. (Optional) Apply stop penalty (if boarding or exiting occurred)
+│   ├─ g. Set elevator car direction
+│   └─ h. Move the elevator up or down if not idle
 │
-└─ 4. End condition check
+└─ 4. End condition check (all passengers have arrived)
 ```
 
 ---
 
 ## Step 1 — Release requests
 
-At the start of each tick, all requests whose timestamp ≤ current tick are submitted to the algorithm. The loop processes them in timestamp order.
+At the start of each tick, all requests whose timestamp = current tick are submitted to the algorithm. The loop processes them in timestamp order.
 
 Each request is converted to a `Passenger` object and passed to `algorithm.assign(passenger, elevators)`. If the algorithm returns an elevator, the passenger is added to that elevator's `assigned` queue and the request is consumed.
 
-**Retry on failure.** If `assign` returns `None` (all eligible elevators are at capacity), the request is not consumed. It will be retried at the start of the next tick, before any new requests for that tick are issued.
-
 ---
 
-## Step 2 — Log positions
+## Step 2 — Log elevator positions
 
 Each elevator's current floor is written to the position log before any movement occurs. This captures the state at the *start* of the tick.
 
 ---
 
-## Step 3 — Per-elevator processing
+## Step 3 — For each elevator
 
 Elevators are processed sequentially in ID order.
 
-### a. Active tick accounting
+### a. Tracking the total time this elevator had traveled
 If the elevator is not idle (state ≠ `IDLE` or it has pending destinations), `active_ticks` is incremented. This counter is used for utilization statistics.
 
-### b. Stop countdown
-When `stop_ticks_remaining > 0`, the elevator is serving a stop penalty (modelling door open/close time). The counter is decremented and the rest of the elevator's processing for this tick is skipped — the elevator neither boards/exits passengers nor moves.
+### b. (Optional) Process stop penalty
+Stop penalty is enabled if the `stop-tick` is set to a positive integer to model door open/close time. When `stop_ticks_remaining > 0`, the elevator is serving a stop penalty . The counter is decremented and the rest of the elevator's processing for this tick is skipped — the elevator neither boards/exits passengers nor moves.
 
 ### c. Exit passengers
 `elevator.exit(tick)` removes all passengers whose `destination == current_floor`, sets their `arrive_time = tick`, and discards that floor from the elevator's destination set.
 
 ### d. Board assigned passengers
-`elevator.board(tick)` boards any passengers in the `assigned` queue whose `origin == current_floor`, up to the elevator's remaining capacity. Each boarded passenger has `board_time = tick` set and their destination floor is added to the elevator's destination set. Their origin floor is removed from destinations once no other assigned passengers remain waiting there.
+`elevator.board(tick)` boards any passengers in the elevator's `assigned` queue whose `origin == current_floor`, up to the elevator's remaining capacity. Each boarded passenger has `board_time = tick` set and their destination floor is added to the elevator's destination set. Their origin floor is removed from destinations once no other assigned passengers remain waiting there.
 
 ### e. Log arrived passengers
 Passengers returned by `exit()` are written to the passenger log.
 
-### f. Stop penalty
+### f. (Optional) Start stop penalty
 If any passengers exited or boarded this tick and `config.stop_ticks > 0`, the elevator enters `STOPPED` state with `stop_ticks_remaining = config.stop_ticks`. Processing for this elevator ends here; it will not move until the countdown expires.
 
-### g. Set direction
+### g. Set elevator direction
 
 Direction follows a **SCAN-like** (look-both-ways) policy:
 
@@ -127,9 +125,9 @@ These are checked at the *end* of each tick, after all elevator movements. The t
 
 ## Assignment contract
 
-`algorithm.assign(passenger, elevators)` is called **once per passenger**, at the tick their request is released. The base class pre-filters elevators whose `assigned + passengers` count has reached capacity before calling the algorithm's selection logic.
+`algorithm.assign(passenger, elevators)` is called **once per passenger**, at the tick their request is released.
 
-If no elevator can be assigned, the simulation retries the same passenger at the start of the next tick. The simulation does not call `assign` again on a passenger that is already assigned to an elevator.
+A passnger is guaranteed an elevator assignment. However, the passenger is not allowed to board if the elevator is at capacity when it reaches the source floor. In that case the passenger will continue to wait, and the elevator will return to pick up the passenger after the current passengers had exited.
 
 ---
 
