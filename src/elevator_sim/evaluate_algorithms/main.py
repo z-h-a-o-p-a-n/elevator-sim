@@ -1,14 +1,18 @@
 """CLI entry point for evaluate-algorithms."""
 
 import argparse
+import logging
 import sys
 from pathlib import Path
 
+from .. import configure_logging
 from ..algorithms import REGISTRY
 from ..config import SimConfig
 from ..io.reader import parse_csv
 from .display import print_results
 from .runner import AlgoSpec, parse_algo_spec, run_algo
+
+logger = logging.getLogger(__name__)
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -34,12 +38,19 @@ def main(argv: list[str] | None = None) -> None:
             f"Available algorithms: {', '.join(REGISTRY)}."
         ),
     )
+    parser.add_argument(
+        "--log-level",
+        default=None,
+        metavar="LEVEL",
+        help="Logging level: DEBUG, INFO, WARNING, ERROR, CRITICAL (default: INFO, overrides LOG_LEVEL env var)",
+    )
 
     args = parser.parse_args(argv)
+    configure_logging(args.log_level)
 
     input_path = Path(args.input)
     if not input_path.exists():
-        print(f"Error: input file '{input_path}' not found.", file=sys.stderr)
+        logger.error("Error: input file '%s' not found.", input_path)
         sys.exit(1)
 
     base_config = SimConfig(
@@ -57,13 +68,10 @@ def main(argv: list[str] | None = None) -> None:
         try:
             spec = parse_algo_spec(raw)
         except ValueError as e:
-            print(f"Error: {e}", file=sys.stderr)
+            logger.error("Error: %s", e)
             sys.exit(1)
         if spec.name not in REGISTRY:
-            print(
-                f"Error: unknown algorithm '{spec.name}'. Available: {', '.join(REGISTRY)}.",
-                file=sys.stderr,
-            )
+            logger.error("Error: unknown algorithm '%s'. Available: %s.", spec.name, ", ".join(REGISTRY))
             sys.exit(1)
         specs.append(spec)
 
@@ -71,10 +79,10 @@ def main(argv: list[str] | None = None) -> None:
 
     results = []
     for spec in specs:
-        print(f"Running {spec.label}...", end=" ", flush=True)
+        logger.info("Running %s...", spec.label)
         result = run_algo(requests, base_config, spec)
         results.append(result)
-        print("done")
+        logger.info("done")
 
     base_config_desc = (
         f"floors={args.floors} | elevators={args.elevators} | "

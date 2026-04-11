@@ -20,7 +20,8 @@ uv run elevator-sim requests.csv \
   --algorithm nearest_car \
   --algo-config '{"direction_bonus": 5.0}' \
   --output-dir output/ \
-  --run-id my_run
+  --run-id my_run \
+  --log-level INFO
 
 # Zone-based dispatch with custom zones
 uv run elevator-sim requests.csv \

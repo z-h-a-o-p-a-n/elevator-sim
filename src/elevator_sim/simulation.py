@@ -1,11 +1,15 @@
 """Core simulation tick loop."""
 
+import logging
+
 from .algorithms.base import BaseAlgorithm
 from .config import SimConfig
 from .io.reader import Request
 from .io.writer import LogWriter
 from .models.elevator import Direction, Elevator, ElevatorState
 from .models.passenger import Passenger
+
+logger = logging.getLogger(__name__)
 
 
 class Simulation:
@@ -44,7 +48,7 @@ class Simulation:
                 elevator = self.algorithm.assign(passenger, self.elevators)
                 if elevator is None:
                     # No elevator can be assigned at the moment, exit the loop wait for the next tick
-                    # print("no assignable elevator at this time")
+                    logger.debug("no assignable elevator at this time")
                     break
                 else:
                     self.passengers.append(passenger)
@@ -89,10 +93,6 @@ class Simulation:
             all_arrived = all(p.arrived for p in self.passengers)
             if all_requests_issued and all_arrived:
                 break
-            # elif tick > 200:
-            #     print(f"stuck passengers:{", ".join(map(lambda p: str(p.id) + " assigned to " + str(p.assigned_elevator_id), filter(lambda p: not p.arrived, self.passengers)))}")
-            #     exit(-1)
-            # print(f"tick {tick}")
             tick += 1
 
         self.total_ticks = tick + 1
@@ -100,10 +100,16 @@ class Simulation:
 
     def _sanity_check_req(self, req: Request) -> None:
         if req.source > self.config.num_floors or req.dest > self.config.num_floors:
-            print(f"The source {req.source} and dest {req.dest} floor cannot exceed the number of floors {self.config.num_floors}")
+            logger.error(
+                "The source %s and dest %s floor cannot exceed the number of floors %s",
+                req.source, req.dest, self.config.num_floors,
+            )
             exit(-1)
         elif req.source < 1 or req.dest < 1:
-            print(f"The source {req.source} and dest {req.dest} floor cannot be less than 1")
+            logger.error(
+                "The source %s and dest %s floor cannot be less than 1",
+                req.source, req.dest,
+            )
             exit(-1)
 
     def _set_direction(self, elevator: Elevator) -> None:
@@ -145,5 +151,5 @@ class Simulation:
 
     def _check_still_has_passengers(self, elevator: Elevator) -> None:
         if len(elevator.passengers) > 0:
-            print(f"elevator {elevator.id} still has {len(elevator.passengers)} passengers")
+            logger.error("elevator %s still has %s passengers", elevator.id, len(elevator.passengers))
             exit(-1)

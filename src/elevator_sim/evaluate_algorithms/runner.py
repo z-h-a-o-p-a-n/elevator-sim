@@ -130,7 +130,8 @@ def run_algo(requests: list[Request], base_config: SimConfig, spec: AlgoSpec) ->
         algorithm=spec.name,
     )
 
-    algorithm = get_algorithm(spec.name, spec.algo_params)
+    # algorithm = get_algorithm(spec.name, spec.algo_params)
+    algorithm = get_algorithm(config, {})
 
     sim = Simulation(config, algorithm)
     with NullWriter() as writer:

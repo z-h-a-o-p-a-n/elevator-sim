@@ -10,8 +10,13 @@ Usage:
 
 import argparse
 import csv
+import logging
 import random
 from pathlib import Path
+
+from .. import configure_logging
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -213,6 +218,12 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Random seed for reproducibility",
     )
+    parser.add_argument(
+        "--log-level",
+        default=None,
+        metavar="LEVEL",
+        help="Logging level: DEBUG, INFO, WARNING, ERROR, CRITICAL (default: INFO, overrides LOG_LEVEL env var)",
+    )
     return parser
 
 
@@ -220,12 +231,15 @@ def main(argv: list[str] | None = None) -> None:
     parser = build_parser()
     args = parser.parse_args(argv)
 
+    configure_logging(args.log_level)
+
     if args.seed is not None:
         random.seed(args.seed)
 
-    print(f"Generating {args.num_records} records "
-          f"({args.num_floors} floors, {args.num_ticks} ticks, "
-          f"distribution={args.distribution!r}) ...")
+    logger.info(
+        "Generating %s records (%s floors, %s ticks, distribution=%r) ...",
+        args.num_records, args.num_floors, args.num_ticks, args.distribution,
+    )
 
     records = generate_records(
         num_records=args.num_records,
@@ -235,7 +249,7 @@ def main(argv: list[str] | None = None) -> None:
     )
 
     write_csv(records, args.output)
-    print(f"Written to {args.output}")
+    logger.info("Written to %s", args.output)
 
 
 if __name__ == "__main__":

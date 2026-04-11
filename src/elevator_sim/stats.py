@@ -1,10 +1,13 @@
 """Compute and display passenger statistics."""
 
+import logging
 import math
 from dataclasses import dataclass
 
 from .models.elevator import Elevator
 from .models.passenger import Passenger
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -99,21 +102,27 @@ def compute_elevator_utilization(
 
 
 def print_stats(stats: SimStats) -> None:
-    print("\n=== Passenger Statistics ===")
-    print(f"  Passengers served : {stats.count}")
-    print(f"  Wait time  — min: {stats.min_wait} (id={stats.min_wait_id}), "
-          f"max: {stats.max_wait} (id={stats.max_wait_id}), "
-          f"avg: {stats.avg_wait:.1f}, std: {stats.std_wait:.1f}, p95: {stats.p95_wait:.1f}")
-    print(f"  Total time — min: {stats.min_total} (id={stats.min_total_id}), "
-          f"max: {stats.max_total} (id={stats.max_total_id}), "
-          f"avg: {stats.avg_total:.1f}, std: {stats.std_total:.1f}, p95: {stats.p95_total:.1f}")
+    logger.info("\n=== Passenger Statistics ===")
+    logger.info("  Passengers served : %s", stats.count)
+    logger.info(
+        "  Wait time  - min: %s (id=%s), max: %s (id=%s), avg: %.1f, std: %.1f, p95: %.1f",
+        stats.min_wait, stats.min_wait_id, stats.max_wait, stats.max_wait_id,
+        stats.avg_wait, stats.std_wait, stats.p95_wait,
+    )
+    logger.info(
+        "  Total time - min: %s (id=%s), max: %s (id=%s), avg: %.1f, std: %.1f, p95: %.1f",
+        stats.min_total, stats.min_total_id, stats.max_total, stats.max_total_id,
+        stats.avg_total, stats.std_total, stats.p95_total,
+    )
 
 
 def print_elevator_utilization(utilizations: list[ElevatorUtilization]) -> None:
-    print("\n=== Elevator Utilization ===")
+    logger.info("\n=== Elevator Utilization ===")
     for u in utilizations:
-        print(f"  Elevator {u.elevator_id}: {u.utilization:.1f}%  "
-              f"({u.active_ticks}/{u.total_ticks} ticks active)")
+        logger.info(
+            "  Elevator %s: %.1f%%  (%s/%s ticks active)",
+            u.elevator_id, u.utilization, u.active_ticks, u.total_ticks,
+        )
 
     rates = [u.utilization for u in utilizations]
     avg = sum(rates) / len(rates)
@@ -125,6 +134,8 @@ def print_elevator_utilization(utilizations: list[ElevatorUtilization]) -> None:
         idx = (len(sorted_rates) - 1) * 95 / 100
         lo, hi = int(idx), min(int(idx) + 1, len(sorted_rates) - 1)
         p95 = sorted_rates[lo] + (sorted_rates[hi] - sorted_rates[lo]) * (idx - lo)
-    print(f"  ---")
-    print(f"  Utilization — min: {min(rates):.1f}%, max: {max(rates):.1f}%, "
-          f"avg: {avg:.1f}%, std: {std:.1f}%, p95: {p95:.1f}%")
+    logger.info("  ---")
+    logger.info(
+        "  Utilization - min: %.1f%%, max: %.1f%%, avg: %.1f%%, std: %.1f%%, p95: %.1f%%",
+        min(rates), max(rates), avg, std, p95,
+    )

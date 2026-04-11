@@ -34,6 +34,20 @@ requests = parse_records([
 run(requests)
 ```
 
+## CLI Options
+
+| Flag | Description | Default |
+|---|---|---|
+| `--floors` | Number of floors | `100` |
+| `--elevators` | Number of elevators | `3` |
+| `--capacity` | Elevator capacity | `8` |
+| `--stop-ticks` | Ticks spent stopped after boarding/exiting | `0` |
+| `--algorithm` | Dispatch algorithm (`nearest_car`, `round_robin`, `zoned_dispatch`) | `nearest_car` |
+| `--algo-config` | Algorithm parameters as JSON | algorithm default |
+| `--output-dir` | Directory for output CSV files | `output/` |
+| `--run-id` | Log file prefix | timestamp |
+| `--log-level` | Logging level (overrides `LOG_LEVEL` env var) | `INFO` |
+
 ## Output
 
 Two CSV files are written to `output/` (or `--output-dir`) per run:
@@ -54,6 +68,26 @@ passenger1,1,51,0,0,50
 ```
 
 Statistics (min/max/avg/p95 for wait time and total time) are printed to stdout.
+
+## Logging
+
+The simulation logs to stdout. The log level can be set three ways (highest priority wins):
+
+1. **CLI flag**: `--log-level DEBUG`
+2. **Environment variable**: `LOG_LEVEL=DEBUG`
+3. **Default**: `INFO`
+
+```bash
+# Via flag
+uv run elevator-sim requests.csv --log-level DEBUG
+
+# Via environment variable
+LOG_LEVEL=WARNING uv run elevator-sim requests.csv
+```
+
+Valid levels: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`.
+
+Before each run the simulation logs the full `SimConfig` and the resolved algorithm config at `INFO` level.
 
 ## Generating Mock Data
 

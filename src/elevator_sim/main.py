@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import sys
 from datetime import datetime
 from pathlib import Path
 
+from . import configure_logging
 from .algorithms import REGISTRY, get_algorithm
 from .config import SimConfig
 from .io.reader import Request, parse_csv, parse_records
@@ -19,6 +21,8 @@ from .stats import (
     print_elevator_utilization,
     print_stats,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def run(
@@ -46,6 +50,10 @@ def run(
     else:
         algorithm = get_algorithm(config, algo_config)
 
+    effective_algo_config = algo_config if algo_config is not None else config[config.algorithm]
+    logger.info("Simulation configuration: %s", config)
+    logger.info("Algorithm config: %s", effective_algo_config)
+
     sim = Simulation(config=config, algorithm=algorithm)
 
     with LogWriter(
@@ -63,9 +71,9 @@ def run(
     print_elevator_utilization(utilizations)
 
     out = Path(config.output_dir)
-    print(f"\nLogs written to:")
-    print(f"  {out / f'{run_id}_positions.csv'}")
-    print(f"  {out / f'{run_id}_passengers.csv'}")
+    logger.info("\nLogs written to:")
+    logger.info("  %s", out / f"{run_id}_positions.csv")
+    logger.info("  %s", out / f"{run_id}_passengers.csv")
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -114,8 +122,15 @@ def main(argv: list[str] | None = None) -> None:
         metavar="ID",
         help="Log file prefix (default: timestamp)",
     )
+    parser.add_argument(
+        "--log-level",
+        default=None,
+        metavar="LEVEL",
+        help="Logging level: DEBUG, INFO, WARNING, ERROR, CRITICAL (default: INFO, overrides LOG_LEVEL env var)",
+    )
 
     args = parser.parse_args(argv)
+    configure_logging(args.log_level)
 
     config = SimConfig(
         num_floors=args.floors,
@@ -133,7 +148,7 @@ def main(argv: list[str] | None = None) -> None:
     try:
         requests = parse_csv(args.input)
     except FileNotFoundError:
-        print(f"Error: input file not found: {args.input}", file=sys.stderr)
+        logger.error("Error: input file not found: %s", args.input)
         sys.exit(1)
 
     run_id = args.run_id or datetime.now().strftime("%Y%m%d_%H%M%S")

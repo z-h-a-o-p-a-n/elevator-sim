@@ -1,9 +1,12 @@
 """Render evaluation results as a side-by-side terminal table."""
 
+import logging
 import shutil
 
 from ..stats import ElevatorUtilization
 from .runner import EvalResult
+
+logger = logging.getLogger(__name__)
 
 _SEP = "─"
 _COL_SEP = " │ "
@@ -54,23 +57,23 @@ def print_results(results: list[EvalResult], input_name: str, base_config_desc: 
             parts.append(_COL_SEP + v[:value_col_ws[i]].ljust(value_col_ws[i]))
         return "".join(parts)
 
-    print(f"\n=== Algorithm Evaluation: {input_name} ===")
-    print(f"Config: {base_config_desc}")
-    print()
-    print(header_row())
-    print(divider())
+    logger.info("\n=== Algorithm Evaluation: %s ===", input_name)
+    logger.info("Config: %s", base_config_desc)
+    logger.info("")
+    logger.info(header_row())
+    logger.info(divider())
 
     section: str | None = None
     for metric, values, is_section_header in rows:
         if is_section_header:
             if section is not None:
-                print(divider())
+                logger.info(divider())
             section = metric
-            print(data_row(metric, values))
+            logger.info(data_row(metric, values))
         else:
-            print(data_row(metric, values))
+            logger.info(data_row(metric, values))
 
-    print(divider())
+    logger.info(divider())
 
 
 def _build_rows(results: list[EvalResult]) -> list[tuple[str, list[str], bool]]:
