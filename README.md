@@ -39,7 +39,17 @@ uv run elevator-sim requests.csv \
 
 ## Time Spent
 
-<!-- TODO: fill in -->
+| Task | Hours |
+|---|---|
+| Requirement analysis | 1.0 |
+| Simulation loop proof-of-concept | 3.0 |
+| Nearest-car algorithm | 2.0 |
+| Round-robin algorithm | 0.5 |
+| Zone-dispatch algorithm | 2.0 |
+| Mock data generator | 1.5 |
+| Algorithm Evaluator | 1.5 |
+| Documentation (with Claude) | 0.5 |
+| **Total** | **12.0** |
 
 ## Assumptions & Trade-offs
 
@@ -49,9 +59,12 @@ uv run elevator-sim requests.csv \
 - **All elevators start at floor 1**.
 - **Boarding/exiting on same tick**: An elevator can drop off and pick up passengers at the same floor in one tick.
 - **Capacity**: If an elevator is full, assigned passengers at that floor wait until the next visit.
+- **Sky-lobby**: Two elevator cars can share the SAME elevator shaft. The upper one serves one of the top zones, the lower one serves the lower local floors.
+
 
 ## What I'd Improve With More Time
 
+- Complete Sky-lobby implementation
 - Express elevator support (skip floors)
 - Visualization (floor-by-floor animation or Gantt chart)
 - Benchmark suite to compare algorithms across traffic patterns
