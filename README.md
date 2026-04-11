@@ -67,6 +67,7 @@ uv run elevator-sim requests.csv \
 
 - Complete Sky-lobby implementation
 - Express elevator support (skip floors)
+- Produce the necessary artifacts (full time-series records, decision logs, etc) for Supervised and Reinforcement trainings
 - Visualization (floor-by-floor animation or Gantt chart)
 - Benchmark suite to compare algorithms across traffic patterns
 

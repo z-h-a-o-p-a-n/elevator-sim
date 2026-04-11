@@ -48,6 +48,7 @@ The distribution controls when requests arrive across the simulation's time hori
 
 ### `uniform`
 Each request is placed at a tick drawn uniformly at random from `[0, num_ticks)`. Produces a flat, evenly spread traffic pattern.
+![uniform distribution](images/uniform.png)
 
 ### `gaussian`
 Ticks are drawn from a normal distribution centred at the midpoint of the time horizon:
@@ -58,6 +59,7 @@ std  = num_ticks / 6
 ```
 
 Values are clamped to `[0, num_ticks)`. Produces a single traffic peak at the middle of the day.
+![gaussian distribution](images/gaussian.png)
 
 ### `exponential`
 Ticks are drawn from an exponential distribution with scale `num_ticks / 5`, then clamped:
@@ -68,20 +70,21 @@ tick  = Exponential(1 / scale)  clamped to [0, num_ticks)
 ```
 
 Produces a front-loaded pattern where most requests arrive early and traffic decays over time.
+![exponential distribution](images/exponential.png)
 
 ### `workday`
 Simulates a realistic office building day with five overlapping traffic components. Each record first selects a component by weighted random choice, then samples a tick and floor pair from that component:
 
 | Component | Center | Std | Weight | Floor bias |
 |-----------|--------|-----|--------|------------|
-| AM rush | 10% of day | 4% | 30% | `up_from_1` — floor 1 → upper floor |
-| Lunch (down) | 40% | 3% | 15% | `down_to_1` — upper floor → floor 1 |
-| Lunch (up) | 47% | 3% | 10% | `up_from_1` |
-| PM rush | 80% | 4% | 30% | `down_to_1` |
+| AM rush | 10% of day | 4% | 30% | `up_from_1` — floor 1 -> upper floor |
+| Lunch (down) | 40% | 3% | 15% | `down_to_1` — upper floor -> floor 1 |
+| Lunch (up) | 47% | 3% | 10% | `up_from_1` - mirror of `down_to_1` |
+| PM rush | 80% | 4% | 30% | `down_to_1` - upper floor -> floor 1 |
 | Background | 50% | 30% | 15% | `none` — fully random |
 
 Center and std are expressed as fractions of `num_ticks`, so the pattern scales to any time horizon. The background component has a wide standard deviation (30%) to spread low-level traffic across the whole day.
-
+![workday distribution](images/work_day.png)
 ---
 
 ## Floor pair sampling
@@ -102,21 +105,3 @@ The destination is always guaranteed to differ from the source.
 ## Reproducibility
 
 Passing `--seed` sets `random.seed()` before any sampling occurs. The same seed, distribution, and parameter combination always produces identical output.
-
----
-
-## Programmatic usage
-
-```python
-from elevator_sim.mock_data.generate import generate_records, write_csv
-
-records = generate_records(
-    num_records=500,
-    num_floors=60,
-    num_ticks=2000,
-    distribution="workday",
-)
-write_csv(records, "input/requests.csv")
-```
-
-`generate_records` returns a list of `(time, id, source, dest)` tuples sorted by time. `write_csv` creates any missing parent directories before writing.
