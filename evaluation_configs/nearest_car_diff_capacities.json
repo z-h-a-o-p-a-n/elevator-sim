@@ -1,0 +1,52 @@
+[
+    {
+        "name": "cap=1",
+        "algorithm": "nearest_car",
+        "capacity": 1
+    },
+    {
+        "name": "cap=3",
+        "algorithm": "nearest_car",
+        "capacity": 3
+    },
+    {
+        "name": "cap=5",
+        "algorithm": "nearest_car",
+        "capacity": 5
+    },
+    {
+        "name": "cap=7",
+        "algorithm": "nearest_car",
+        "capacity": 7
+    },
+    {
+        "name": "cap=9",
+        "algorithm": "nearest_car",
+        "capacity": 9
+    },
+    {
+        "name": "cap=11",
+        "algorithm": "nearest_car",
+        "capacity": 11
+    },
+    {
+        "name": "cap=13",
+        "algorithm": "nearest_car",
+        "capacity": 13
+    },
+    {
+        "name": "cap=15",
+        "algorithm": "nearest_car",
+        "capacity": 15
+    },
+    {
+        "name": "cap=17",
+        "algorithm": "nearest_car",
+        "capacity": 17
+    },
+    {
+        "name": "cap=19",
+        "algorithm": "nearest_car",
+        "capacity": 19
+    }
+]

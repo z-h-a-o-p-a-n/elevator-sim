@@ -1,0 +1,44 @@
+[
+    {
+        "name": "rr_1",
+        "algorithm": "round_robin",
+        "elevators": 1,
+        "config": {
+        }
+    },
+    {
+        "name": "rr_3",
+        "algorithm": "round_robin",
+        "elevators": 3,
+        "config": {
+        }
+    },
+    {
+        "name": "rr_5",
+        "algorithm": "round_robin",
+        "elevators": 5,
+        "config": {
+        }
+    },
+    {
+        "name": "rr_7",
+        "algorithm": "round_robin",
+        "elevators": 7,
+        "config": {
+        }
+    },
+    {
+        "name": "rr_9",
+        "algorithm": "round_robin",
+        "elevators": 9,
+        "config": {
+        }
+    },
+    {
+        "name": "rr_11",
+        "algorithm": "round_robin",
+        "elevators": 11,
+        "config": {
+        }
+    }
+]

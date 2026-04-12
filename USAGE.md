@@ -140,49 +140,51 @@ The `workday` distribution simulates a typical office building with three traffi
 Compare dispatch algorithms side-by-side against the same input file. Results are presented in a terminal table with all stats (wait time, total time, elevator utilization) plus simulation duration and total floors traveled.
 
 ```bash
-# Compare all registered algorithms with shared config (default)
-uv run evaluate-algorithms input/mock_work_day.csv --floors 60 --elevators 4
-
-# Compare specific algorithms
-uv run evaluate-algorithms input/mock_work_day.csv --floors 60 --elevators 4 \
-  --algo nearest_car \
-  --algo round_robin
-
-# Compare the same algorithm with different parameter values
-uv run evaluate-algorithms input/mock_work_day.csv --floors 60 --elevators 4 \
-  --algo nearest_car \
-  --algo "nearest_car:direction_bonus=5.0"
-
-# Per-algo sim config overrides (e.g. give round_robin fewer elevators)
-uv run evaluate-algorithms input/sample_requests.csv --floors 60 --elevators 10 --capacity 10 \
-  --algo nearest_car \
-  --algo "round_robin:elevators=2,capacity=5"
+uv run evaluate-algorithms input/mock_work_day.csv \
+  --floors 60 --elevators 4 \
+  --config-file evaluation_configs/all_algo_side_by_side.json
 ```
 
 ### Options
 
 | Flag | Short | Description | Default |
 |---|---|---|---|
-| `--floors` | `-f` | Number of floors | `10` |
-| `--elevators` | `-e` | Number of elevators (shared baseline) | `3` |
-| `--capacity` | `-c` | Elevator capacity | `8` |
+| `--floors` | `-f` | Number of floors (baseline) | `10` |
+| `--elevators` | `-e` | Number of elevators (baseline) | `3` |
+| `--capacity` | `-c` | Elevator capacity (baseline) | `8` |
 | `--stop-ticks` | | Stop-tick penalty per boarding/exiting event | `0` |
-| `--algo` | | Algorithm spec (repeatable; see below) | all algorithms |
+| `--config-file` | | Path to a JSON file defining algorithm runs (required) | — |
 
-### `--algo` spec format
+### Config file format
 
-Each `--algo` value is `name` or `name:key=val,key=val,...`.
+`--config-file` points to a JSON array. Each element defines one simulation run:
 
-Keys that match sim-config fields override that run's config:
+```json
+[
+  {
+    "name": "nearest_car",
+    "algorithm": "nearest_car",
+    "config": { "direction_bonus": 5.0 }
+  },
+  {
+    "name": "round_robin (2 elevators)",
+    "algorithm": "round_robin",
+    "elevators": 2
+  }
+]
+```
 
-| Key | SimConfig field |
-|---|---|
-| `floors` | `num_floors` |
-| `elevators` | `num_elevators` |
-| `capacity` | `elevator_capacity` |
-| `stop_ticks` | `stop_ticks` |
+| Field | Required | Description |
+|---|---|---|
+| `name` | yes | Label shown in the results table |
+| `algorithm` | yes | Algorithm name (`nearest_car`, `round_robin`, `zoned_dispatch`) |
+| `config` | no | Algorithm parameters passed to the algorithm |
+| `floors` | no | Override baseline `--floors` for this run |
+| `elevators` | no | Override baseline `--elevators` for this run |
+| `capacity` | no | Override baseline `--capacity` for this run |
+| `stop_ticks` | no | Override baseline `--stop-ticks` for this run |
 
-All other keys are passed as algorithm parameters (e.g. `direction_bonus` for `nearest_car`).
+Sample config files are in `evaluation_configs/`.
 
 ## Algorithms
 

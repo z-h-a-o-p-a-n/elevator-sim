@@ -1,0 +1,62 @@
+[
+    {
+        "name": "1-zone",
+        "algorithm": "zoned_dispatch",
+        "config": {
+            "sub_algorithm": "nearest_car", 
+            "zones": [
+                {"floors": [1, 50], "elevator_ids": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
+            ]
+        }
+    },
+    {
+        "name": "2-zones",
+        "algorithm": "zoned_dispatch",
+        "config": {
+            "sub_algorithm": "nearest_car", 
+            "zones": [
+                {"floors": [1, 30], "elevator_ids": [1, 2, 3, 4, 5]}, 
+                {"floors": [20, 50], "elevator_ids": [6, 7, 8, 9, 10]}
+            ]
+        }
+    },
+    {
+        "name": "3-zones",
+        "algorithm": "zoned_dispatch",
+        "config": {
+            "sub_algorithm": "nearest_car", 
+            "zones": [
+                {"floors": [1, 25], "elevator_ids": [1, 2, 3]}, 
+                {"floors": [20, 35], "elevator_ids": [4, 5, 6, 7]}, 
+                {"floors": [30, 50], "elevator_ids": [8, 9, 10]}
+            ]
+        }
+    },
+    {
+        "name": "4-zones",
+        "algorithm": "zoned_dispatch",
+        "config": {
+            "sub_algorithm": "nearest_car", 
+            "zones": [
+                {"floors": [1, 20], "elevator_ids": [1, 2]}, 
+                {"floors": [10, 30], "elevator_ids": [3, 4, 5]}, 
+                {"floors": [20, 40], "elevator_ids": [6, 7, 8]}, 
+                {"floors": [30, 50], "elevator_ids": [9, 10]}
+            ]
+        }
+    },
+    {
+        "name": "5-zones",
+        "algorithm": "zoned_dispatch",
+        "config": {
+            "sub_algorithm": "nearest_car", 
+            "zones": [
+                {"floors": [1, 15], "elevator_ids": [1, 2]}, 
+                {"floors": [5, 25], "elevator_ids": [3, 4]}, 
+                {"floors": [15, 35], "elevator_ids": [5, 6]},
+                {"floors": [25, 45], "elevator_ids": [7, 8]},
+                {"floors": [35, 50], "elevator_ids": [9, 10]}
+            ]
+        }
+    }
+]

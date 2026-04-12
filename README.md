@@ -80,4 +80,4 @@ uv run elevator-sim requests.csv \
 - [Algorithm evaluator](docs/evaluate-algorithms.md)
 - [Nearest-car algorithm](docs/algorithms/nearest-car.md)
 - [Round-robin algorithm](docs/algorithms/round-robin.md)
-- [Zoned dispatch algorithm](docs/algorithms/zone-dispatch.md)
+- [Zoned dispatch algorithm](docs/algorithms/zoned-dispatch.md)

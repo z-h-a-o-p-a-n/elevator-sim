@@ -1,6 +1,7 @@
 """CLI entry point for evaluate-algorithms."""
 
 import argparse
+import json
 import logging
 import sys
 from pathlib import Path
@@ -10,7 +11,7 @@ from ..algorithms import REGISTRY
 from ..config import SimConfig
 from ..io.reader import parse_csv
 from .display import print_results
-from .runner import AlgoSpec, parse_algo_spec, run_algo
+from .runner import AlgoSpec, algo_spec_from_dict, run_algo
 
 logger = logging.getLogger(__name__)
 
@@ -26,15 +27,13 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--capacity", "-c", type=int, default=8, metavar="N", help="Elevator capacity (default: 8)")
     parser.add_argument("--stop-ticks", type=int, default=0, metavar="N", help="Stop-tick penalty (default: 0)")
     parser.add_argument(
-        "--algo",
-        action="append",
-        dest="algos",
-        metavar="SPEC",
+        "--config-file",
+        metavar="PATH",
         help=(
-            "Algorithm spec: name or name:key=val,... "
-            "Sim-config keys: floors, elevators, capacity, stop_ticks. "
-            "All other keys are passed as algorithm parameters (e.g. direction_bonus=5.0). "
-            "Repeat --algo to compare multiple configurations. "
+            "Path to a JSON file containing an array of algorithm run objects. "
+            "Each object must have 'name' (label), 'algorithm' (algorithm name), "
+            "and optionally 'config' (algorithm parameters) and sim overrides "
+            "('floors', 'elevators', 'capacity', 'stop_ticks'). "
             f"Available algorithms: {', '.join(REGISTRY)}."
         ),
     )
@@ -60,16 +59,24 @@ def main(argv: list[str] | None = None) -> None:
         stop_ticks=args.stop_ticks,
     )
 
-    # Default: run all registered algorithms once if no --algo flags given.
-    raw_specs: list[str] = args.algos if args.algos else list(REGISTRY.keys())
+    if not args.config_file:
+        logger.error("Error: --config-file is required.")
+        sys.exit(1)
+
+    config_path = Path(args.config_file)
+    if not config_path.exists():
+        logger.error("Error: config file '%s' not found.", config_path)
+        sys.exit(1)
+
+    try:
+        raw_entries = json.loads(config_path.read_text())
+    except json.JSONDecodeError as e:
+        logger.error("Error: failed to parse config file: %s", e)
+        sys.exit(1)
 
     specs: list[AlgoSpec] = []
-    for raw in raw_specs:
-        try:
-            spec = parse_algo_spec(raw)
-        except ValueError as e:
-            logger.error("Error: %s", e)
-            sys.exit(1)
+    for entry in raw_entries:
+        spec = algo_spec_from_dict(entry)
         if spec.name not in REGISTRY:
             logger.error("Error: unknown algorithm '%s'. Available: %s.", spec.name, ", ".join(REGISTRY))
             sys.exit(1)

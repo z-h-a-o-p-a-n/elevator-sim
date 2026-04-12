@@ -67,6 +67,27 @@ _SIM_PARAM_ALIASES: dict[str, str] = {
 }
 
 
+def algo_spec_from_dict(d: dict[str, Any]) -> AlgoSpec:
+    """Build an AlgoSpec from a JSON config-file entry.
+
+    Expected keys:
+      - ``name``      (str)  — label for the run
+      - ``algorithm`` (str)  — algorithm name
+      - ``config``    (dict) — algorithm parameters (optional)
+      - sim overrides: ``capacity``, ``elevators``, ``floors``, ``stop_ticks``
+    """
+    label = d["name"]
+    name = d["algorithm"]
+    algo_params: dict[str, Any] = d.get("config", {})
+    sim_overrides: dict[str, Any] = {}
+    for key, value in d.items():
+        if key in ("name", "algorithm", "config"):
+            continue
+        if key in _SIM_PARAM_ALIASES:
+            sim_overrides[_SIM_PARAM_ALIASES[key]] = value
+    return AlgoSpec(name=name, label=label, algo_params=algo_params, sim_overrides=sim_overrides)
+
+
 def parse_algo_spec(raw: str) -> AlgoSpec:
     """Parse an --algo argument into an AlgoSpec.
 
@@ -130,8 +151,7 @@ def run_algo(requests: list[Request], base_config: SimConfig, spec: AlgoSpec) ->
         algorithm=spec.name,
     )
 
-    # algorithm = get_algorithm(spec.name, spec.algo_params)
-    algorithm = get_algorithm(config, {})
+    algorithm = get_algorithm(config, spec.algo_params)
 
     sim = Simulation(config, algorithm)
     with NullWriter() as writer:

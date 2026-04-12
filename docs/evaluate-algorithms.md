@@ -24,7 +24,7 @@ The tool is split into three modules:
 parse CLI args
     │
     ├─ build base SimConfig from shared flags (--floors, --elevators, etc.)
-    ├─ parse each --algo spec into an AlgoSpec
+    ├─ load and parse --config-file JSON into AlgoSpec list
     └─ load requests from CSV (once, shared across all runs)
 
 for each AlgoSpec:
@@ -42,35 +42,36 @@ The input CSV is parsed **once** and the same `list[Request]` is passed to every
 
 ## `AlgoSpec` — the spec format
 
-Each `--algo` argument is parsed into an `AlgoSpec`:
+Each entry in the `--config-file` JSON array is parsed into an `AlgoSpec`. The entry is a JSON object with these fields:
 
+| Field | Required | Description |
+|-------|----------|-------------|
+| `name` | yes | Label shown in the results table |
+| `algorithm` | yes | Algorithm name (must be a key in `REGISTRY`) |
+| `config` | no | Dict of algorithm parameters passed directly to the algorithm |
+| `floors` / `num_floors` | no | Override `num_floors` for this run |
+| `elevators` / `num_elevators` | no | Override `num_elevators` for this run |
+| `capacity` / `elevator_capacity` | no | Override `elevator_capacity` for this run |
+| `stop_ticks` | no | Override `stop_ticks` for this run |
+
+All sim-override fields replace the corresponding base-config value for that run only; the baseline comes from the shared CLI flags (`--floors`, `--elevators`, etc.).
+
+Example:
+
+```json
+[
+  {
+    "name": "nearest_car",
+    "algorithm": "nearest_car",
+    "config": { "direction_bonus": 5.0 }
+  },
+  {
+    "name": "round_robin (2 elevators)",
+    "algorithm": "round_robin",
+    "elevators": 2
+  }
+]
 ```
-name
-name:key=val,key=val,...
-```
-
-Key–value pairs are split into two buckets:
-
-**Sim-config overrides** — keys that map to `SimConfig` fields replace the corresponding base-config value for that run only:
-
-| CLI key | `SimConfig` field |
-|---------|------------------|
-| `floors` / `num_floors` | `num_floors` |
-| `elevators` / `num_elevators` | `num_elevators` |
-| `capacity` / `elevator_capacity` | `elevator_capacity` |
-| `stop_ticks` | `stop_ticks` |
-
-**Algorithm parameters** — all other keys are passed directly to the algorithm as `algo_params`.
-
-Values are coerced in order: `int` -> `float` -> `str`.
-
-The human-readable `label` is built from the algorithm name plus all parameters (sim overrides and algo params combined):
-
-```
-nearest_car (direction_bonus=5.0, num_floors=60)
-```
-
-If no `--algo` flags are given, the tool defaults to running every algorithm in `REGISTRY` once with no extra parameters.
 
 ---
 
