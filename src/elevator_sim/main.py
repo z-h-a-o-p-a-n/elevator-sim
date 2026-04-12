@@ -46,13 +46,11 @@ def run(
 
     # if the algo configuration is not specified, use the default
     if algo_config is None:
-        algorithm = get_algorithm(config, config[config.algorithm])
-    else:
-        algorithm = get_algorithm(config, algo_config)
+        algo_config = config.algo_config[config.algorithm]
 
-    effective_algo_config = algo_config if algo_config is not None else config[config.algorithm]
+    algorithm = get_algorithm(config, algo_config)
     logger.info("Simulation configuration: %s", config)
-    logger.info("Algorithm config: %s", effective_algo_config)
+    logger.info("Algorithm config: %s", algo_config)
 
     sim = Simulation(config=config, algorithm=algorithm)
 

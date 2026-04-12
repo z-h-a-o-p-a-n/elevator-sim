@@ -28,10 +28,10 @@ parse CLI args
     └─ load requests from CSV (once, shared across all runs)
 
 for each AlgoSpec:
-    merge base SimConfig with per-spec sim overrides → run SimConfig
+    merge base SimConfig with per-spec sim overrides -> run SimConfig
     instantiate algorithm
     run Simulation with NullWriter        ← no log files written
-    collect SimStats + ElevatorUtilization + total_floors_traveled → EvalResult
+    collect SimStats + ElevatorUtilization + total_floors_traveled -> EvalResult
 
 print_results(all EvalResults)
 ```
@@ -62,7 +62,7 @@ Key–value pairs are split into two buckets:
 
 **Algorithm parameters** — all other keys are passed directly to the algorithm as `algo_params`.
 
-Values are coerced in order: `int` → `float` → `str`.
+Values are coerced in order: `int` -> `float` -> `str`.
 
 The human-readable `label` is built from the algorithm name plus all parameters (sim overrides and algo params combined):
 

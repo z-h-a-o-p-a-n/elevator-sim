@@ -52,7 +52,7 @@ class ZonedDispatchAlgorithm(BaseAlgorithm):
         # use a single nearest_car algo instance for all zones
         self._nearest_car = NearestCarAlgorithm(config)
 
-    def assign(self, passenger: Passenger, elevators: list[Elevator]) -> Elevator:
+    def pick_elevator_for_passenger(self, passenger: Passenger, elevators: list[Elevator]) -> Elevator:
         zone_idx, zone = self._find_zone(passenger.origin, passenger.destination)
         if zone is None:
             logger.error("Unable to determine the zone for floor %s", passenger.destination)
@@ -78,9 +78,9 @@ class ZonedDispatchAlgorithm(BaseAlgorithm):
 
     def _pick(self, elevators: list[Elevator], passenger: Passenger, zone_idx: int) -> Elevator:
         if self._sub_algorithm == "nearest_car":
-            return self._nearest_car.assign(passenger, elevators)
+            return self._nearest_car.pick_elevator_for_passenger(passenger, elevators)
         if self._sub_algorithm == "round_robin":
             rr_algo = self._rr_algos.get(zone_idx)
-            return rr_algo.assign(passenger, elevators)
+            return rr_algo.pick_elevator_for_passenger(passenger, elevators)
         # random
         return random.choice(elevators)

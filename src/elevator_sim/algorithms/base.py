@@ -13,8 +13,8 @@ class BaseAlgorithm(ABC):
         self._algo_config = algo_config
 
     @abstractmethod
-    def assign(self, passenger: Passenger, elevators: list[Elevator]) -> Elevator:
-        """Assign a passenger to an elevator.
+    def pick_elevator_for_passenger(self, passenger: Passenger, elevators: list[Elevator]) -> Elevator:
+        """Pick an elevator for the given passenger.
 
         Called once per new passenger at the tick they submit their request.
         The returned elevator will have the passenger added to its assignment queue.

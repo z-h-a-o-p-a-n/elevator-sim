@@ -26,7 +26,7 @@ class NearestCarAlgorithm(BaseAlgorithm):
         self._config = config
         self.direction_bonus = algo_config.get("direction_bonus")
 
-    def assign(self, passenger: Passenger, elevators: list[Elevator]) -> Elevator:
+    def pick_elevator_for_passenger(self, passenger: Passenger, elevators: list[Elevator]) -> Elevator:
         return min(elevators, key=lambda e: self._score(e, passenger))
 
     def _score(self, elevator: Elevator, passenger: Passenger) -> tuple[float, int]:

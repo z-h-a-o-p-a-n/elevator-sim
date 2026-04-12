@@ -54,7 +54,7 @@ class NullWriter(LogWriter):
 
 
 # SimConfig field names that can be overridden per algo spec.
-# Maps CLI shorthand → SimConfig field name.
+# Maps CLI shorthand -> SimConfig field name.
 _SIM_PARAM_ALIASES: dict[str, str] = {
     "floors": "num_floors",
     "elevators": "num_elevators",

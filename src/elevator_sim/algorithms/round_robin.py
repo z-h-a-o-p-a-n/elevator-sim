@@ -17,7 +17,7 @@ class RoundRobinAlgorithm(BaseAlgorithm):
         self._counter = 0
         self._config = config
 
-    def assign(self, passenger: Passenger, elevators: list[Elevator]) -> Elevator:
+    def pick_elevator_for_passenger(self, passenger: Passenger, elevators: list[Elevator]) -> Elevator:
         m = len(elevators)
         selected = elevators[self._counter % m]
         self._counter += 1

@@ -89,16 +89,16 @@ New passenger: origin = 6, destination = 9
 ```
 
 **Elevator 1:**
-- Heading UP, origin (6) is above current floor (3) → effective position = 3
+- Heading UP, origin (6) is above current floor (3) -> effective position = 3
 - Distance = |3 − 6| = 3
-- Overshoot: destinations above origin (6) → {8}, overshoot = 8 − 6 = 2
+- Overshoot: destinations above origin (6) -> {8}, overshoot = 8 − 6 = 2
 - Score = (3 + 0 + 2×2, load) = **(7, 1)**
 
 **Elevator 2:**
 - Heading DOWN, origin (6) is above current floor (7)? No — 6 < 7, origin is *below*.
-- Elevator is moving away from origin → effective position = min(destinations below 7) = 4
+- Elevator is moving away from origin -> effective position = min(destinations below 7) = 4
 - Distance = |4 − 6| = 2
-- Overshoot: elevator is moving away, not toward origin → 0
+- Overshoot: elevator is moving away, not toward origin -> 0
 - Score = (2 + 0 + 0, load) = **(2, 1)**
 
 Elevator 2 wins despite being further away, because Elevator 1 must first travel to floor 8 before it can come back down to 6.

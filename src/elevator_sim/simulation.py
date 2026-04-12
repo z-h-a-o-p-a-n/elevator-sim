@@ -28,10 +28,14 @@ class Simulation:
         
         # just in case the rows in the file are not in ascending order by timestamp
         pending = sorted(requests, key=lambda r: r.time)
+        logger.debug("Start simulation run for %s requests", len(pending))
+
         next_request_idx = 0
         tick = 0
 
         while True:
+            logger.debug("Start tick #%s", tick)
+
             # 1. Release requests arriving at this tick (no peeking ahead).
             while next_request_idx < len(pending) and pending[next_request_idx].time == tick:
                 req = pending[next_request_idx]
@@ -44,9 +48,10 @@ class Simulation:
                     destination=req.dest,
                     request_time=req.time,
                 )
-                elevator = self.algorithm.assign(passenger, self.elevators)
+                elevator = self.algorithm.pick_elevator_for_passenger(passenger, self.elevators)
                 self.passengers.append(passenger)
                 elevator.assign(passenger)
+                logger.debug("assigned elevator %s to passenger %s", elevator.id, passenger.id)
                 next_request_idx += 1
 
             # 2. Log positions at start of tick (before movement)
@@ -80,12 +85,18 @@ class Simulation:
 
                 # Set direction and move
                 self._set_direction(elevator)
+                logger.debug("Elevator %s will go %s", elevator.direction)
+
                 elevator.move()
 
             # 4. End condition: all requests consumed and all passengers arrived
             all_requests_issued = next_request_idx >= len(pending)
             all_arrived = all(p.arrived for p in self.passengers)
-            if all_requests_issued and all_arrived:
+            if not all_requests_issued:
+                logger.debug("Continue loop because there are still more requests")
+            elif not all_arrived:
+                logger.debug("Continue loop because not all passengers have reached their destinations")
+            else:
                 break
             tick += 1
 

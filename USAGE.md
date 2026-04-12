@@ -154,9 +154,9 @@ uv run evaluate-algorithms input/mock_work_day.csv --floors 60 --elevators 4 \
   --algo "nearest_car:direction_bonus=5.0"
 
 # Per-algo sim config overrides (e.g. give round_robin fewer elevators)
-uv run evaluate-algorithms input/sample_requests.csv --floors 60 \
+uv run evaluate-algorithms input/sample_requests.csv --floors 60 --elevators 10 --capacity 10 \
   --algo nearest_car \
-  --algo "round_robin:elevators=2"
+  --algo "round_robin:elevators=2,capacity=5"
 ```
 
 ### Options
