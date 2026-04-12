@@ -1,0 +1,74 @@
+[
+    {
+        "name": "2-non-overlap-zones",
+        "algorithm": "zoned_dispatch",
+        "config": {
+            "sub_algorithm": "nearest_car", 
+            "zones": [
+                {"floors": [1, 25], "elevator_ids": [1, 2, 3, 4, 5, 6]}, 
+                {"floors": [26, 50], "elevator_ids": [7, 8, 9, 10, 11, 12]}
+            ]
+        }
+    },
+    {
+        "name": "2-overlap-zones",
+        "algorithm": "zoned_dispatch",
+        "config": {
+            "sub_algorithm": "nearest_car", 
+            "zones": [
+                {"floors": [1, 35], "elevator_ids": [1, 2, 3, 4, 5, 6]}, 
+                {"floors": [15, 50], "elevator_ids": [7, 8, 9, 10, 11, 12]}
+            ]
+        }
+    },
+    {
+        "name": "3-non-overlap-zones",
+        "algorithm": "zoned_dispatch",
+        "config": {
+            "sub_algorithm": "nearest_car", 
+            "zones": [
+                {"floors": [1, 16], "elevator_ids": [1, 2, 3, 4]}, 
+                {"floors": [17, 33], "elevator_ids": [5, 6, 7, 8]}, 
+                {"floors": [34, 50], "elevator_ids": [9, 10, 11, 12]}
+            ]
+        }
+    },
+    {
+        "name": "3-overlap-zones",
+        "algorithm": "zoned_dispatch",
+        "config": {
+            "sub_algorithm": "nearest_car", 
+            "zones": [
+                {"floors": [1, 25], "elevator_ids": [1, 2, 3, 4]}, 
+                {"floors": [20, 35], "elevator_ids": [5, 6, 7, 8]}, 
+                {"floors": [30, 50], "elevator_ids": [9, 10, 11, 12]}
+            ]
+        }
+    },
+    {
+        "name": "4-non-overlap-zones",
+        "algorithm": "zoned_dispatch",
+        "config": {
+            "sub_algorithm": "nearest_car", 
+            "zones": [
+                {"floors": [1, 12], "elevator_ids": [1, 2, 3]}, 
+                {"floors": [13, 25], "elevator_ids": [4, 5, 6]}, 
+                {"floors": [26, 38], "elevator_ids": [7, 8, 9]}, 
+                {"floors": [39, 50], "elevator_ids": [10, 11, 12]}
+            ]
+        }
+    },
+    {
+        "name": "4-overlap-zones",
+        "algorithm": "zoned_dispatch",
+        "config": {
+            "sub_algorithm": "nearest_car", 
+            "zones": [
+                {"floors": [1, 20], "elevator_ids": [1, 2, 3]}, 
+                {"floors": [10, 30], "elevator_ids": [4, 5, 6]}, 
+                {"floors": [20, 40], "elevator_ids": [7, 8, 9]}, 
+                {"floors": [30, 50], "elevator_ids": [10, 11, 12]}
+            ]
+        }
+    }
+]

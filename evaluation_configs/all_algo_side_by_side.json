@@ -18,11 +18,9 @@
         "config": {
             "sub_algorithm": "nearest_car", 
             "zones": [
-                {"floors": [1, 10], "elevator_ids": [1, 2]}, 
-                {"floors": [11, 20], "elevator_ids": [3, 4]}, 
-                {"floors": [21, 30], "elevator_ids": [5, 6]},
-                {"floors": [31, 40], "elevator_ids": [7, 8]},
-                {"floors": [41, 50], "elevator_ids": [9, 10]}
+                {"floors": [1, 16], "elevator_ids": [1, 2, 3, 4]}, 
+                {"floors": [17, 33], "elevator_ids": [5, 6, 7, 8]},
+                {"floors": [34, 50], "elevator_ids": [9, 10, 11, 12]}
             ]
         }
     }
