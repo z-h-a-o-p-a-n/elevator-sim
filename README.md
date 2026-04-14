@@ -42,15 +42,16 @@ uv run elevator-sim requests.csv \
 
 | Task | Hours |
 |---|---|
-| Requirement analysis | 1.0 |
-| Simulation loop proof-of-concept | 3.0 |
-| Nearest-car algorithm | 2.0 |
+| Requirement analysis | 1 |
+| Simulation loop proof-of-concept | 3 |
+| Nearest-car algorithm | 2 |
 | Round-robin algorithm | 0.5 |
-| Zone-dispatch algorithm | 2.0 |
+| Zone-dispatch algorithm | 2 |
 | Mock data generator | 1.5 |
 | Algorithm Evaluator | 1.5 |
 | Documentation (with Claude) | 0.5 |
-| **Total** | **12.0** |
+| Slide Deck | 5 |
+| **Total** | **17** |
 
 ## Assumptions & Trade-offs
 
