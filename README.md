@@ -73,6 +73,7 @@ uv run elevator-sim requests.csv \
 
 ## Documentation
 
+- [Slide Deck Presentation](https://docs.google.com/presentation/d/1XCkRjb11HvNlZvidNjXrjgKyRY0jPVjzIHrvGOJ7a3w/edit?usp=sharing)
 - [Usage guide](USAGE.md) — input format, output format, mock data generator, algorithm evaluator, programmatic API
 - [Requirements](requirements.md) — Original requirements
 - [Simulation loop design](docs/simulation-loop.md)

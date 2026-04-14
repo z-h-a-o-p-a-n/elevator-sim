@@ -44,7 +44,7 @@ tick 0, 1, 2, ...
 
 At the start of each tick, all requests whose timestamp = current tick are submitted to the algorithm. The loop processes them in timestamp order.
 
-Each request is converted to a `Passenger` object and passed to `algorithm.assign(passenger, elevators)`. If the algorithm returns an elevator, the passenger is added to that elevator's `assigned` queue and the request is consumed.
+Each request is converted to a `Passenger` object and passed to `algorithm.pick_elevator_for_passenger(passenger, elevators)`. If the algorithm returns an elevator, the passenger is added to that elevator's `assigned` queue and the request is consumed.
 
 ---
 
@@ -125,7 +125,7 @@ These are checked at the *end* of each tick, after all elevator movements. The t
 
 ## Assignment contract
 
-`algorithm.assign(passenger, elevators)` is called **once per passenger**, at the tick their request is released.
+`algorithm.pick_elevator_for_passenger(passenger, elevators)` is called **once per passenger**, at the tick their request is released.
 
 A passnger is guaranteed an elevator assignment. However, the passenger is not allowed to board if the elevator is at capacity when it reaches the source floor. In that case the passenger will continue to wait, and the elevator will return to pick up the passenger after the current passengers had exited.
 

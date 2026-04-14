@@ -67,6 +67,69 @@ class TestNearestCarBasic:
 
 
 # ---------------------------------------------------------------------------
+# NearestCarAlgorithm – projected load at pickup
+# ---------------------------------------------------------------------------
+
+class TestNearestCarProjectedLoad:
+    def setup_method(self):
+        self.cfg = make_config()
+        self.algo = NearestCarAlgorithm(self.cfg)
+
+    def test_en_route_down_exits_free_capacity(self):
+        """Passengers exiting at or above origin reduce the projected load."""
+        # 8-capacity elevator at floor 8 going DOWN, full with passengers exiting at floors 9, 7, 6
+        e = make_elevator(1, floor=8, direction=Direction.DOWN, capacity=3)
+        p_riding = [
+            Passenger(id="r1", origin=10, destination=9, request_time=0),  # exits at 9 (above origin 6)
+            Passenger(id="r2", origin=10, destination=7, request_time=0),  # exits at 7 (above origin 6)
+            Passenger(id="r3", origin=10, destination=3, request_time=0),  # exits at 3 (below origin 6)
+        ]
+        e.passengers = p_riding
+        new_passenger = make_passenger(origin=6, destination=1)
+        # At floor 6: r1 and r2 have already exited, only r3 remains → projected load = 1
+        assert self.algo._projected_load_at(e, new_passenger) == 1
+
+    def test_en_route_down_full_elevator_considered_available(self):
+        """A full elevator that will have space by the origin is still chosen when it's the best option."""
+        # e1: full, but passenger exiting before origin frees a seat
+        e1 = make_elevator(1, floor=8, direction=Direction.DOWN, capacity=1, destinations={7})
+        r = Passenger(id="r1", origin=10, destination=7, request_time=0)  # exits at 7, above origin 6
+        e1.passengers = [r]
+        # e2: idle, far away
+        e2 = make_elevator(2, floor=1, direction=Direction.IDLE, capacity=1)
+        p = make_passenger(origin=6, destination=1)
+        assert self.algo.pick_elevator_for_passenger(p, [e1, e2]) is e1
+
+    def test_post_trip_includes_travel_to_end_of_run(self):
+        """Post-trip score includes travel from current floor to end of run, then to origin."""
+        # e1: full, both going to floor 8; new passenger at floor 6 going UP to 9
+        # Post-trip distance = |3→8| + |8→6| = 5 + 2 = 7
+        e1 = make_elevator(1, floor=3, direction=Direction.UP, capacity=2, destinations={8})
+        e1.passengers = [
+            Passenger(id="r1", origin=1, destination=8, request_time=0),
+            Passenger(id="r2", origin=1, destination=8, request_time=0),
+        ]
+        # e2: projected load=1 at floor 6; wait=1, direct=3, detour=6-4=2 → score=1+3+4=8
+        e2 = make_elevator(2, floor=7, direction=Direction.DOWN, capacity=2, destinations={6, 4})
+        e2.passengers = [
+            Passenger(id="r3", origin=9, destination=6, request_time=0),
+            Passenger(id="r4", origin=9, destination=4, request_time=0),
+        ]
+        p = make_passenger(origin=6, destination=9)  # going UP
+        # e1 score (7+3=10) > e2 score (8) → e2 wins
+        assert self.algo.pick_elevator_for_passenger(p, [e1, e2]) is e2
+
+    def test_non_en_route_uses_conservative_load(self):
+        """Elevator moving away uses load + assigned without exit credit."""
+        e = make_elevator(1, floor=3, direction=Direction.UP, capacity=8)
+        p_riding = [Passenger(id="r1", origin=1, destination=10, request_time=0)]
+        e.passengers = p_riding
+        new_passenger = make_passenger(origin=1, destination=5)  # below current floor, not en-route
+        # Elevator going UP, origin 1 < current_floor 3 → not en-route → load + assigned = 1 + 0
+        assert self.algo._projected_load_at(e, new_passenger) == 1
+
+
+# ---------------------------------------------------------------------------
 # NearestCarAlgorithm – effective position (moving away from target)
 # ---------------------------------------------------------------------------
 
@@ -101,42 +164,59 @@ class TestNearestCarEffectivePosition:
 
 
 # ---------------------------------------------------------------------------
-# NearestCarAlgorithm – overshoot
+# NearestCarAlgorithm – en-route scoring
 # ---------------------------------------------------------------------------
 
-class TestNearestCarOvershoot:
+class TestNearestCarEnRoute:
     def setup_method(self):
         self.cfg = make_config()
         self.algo = NearestCarAlgorithm(self.cfg)
 
-    def test_no_overshoot_idle(self):
-        e = make_elevator(1, floor=3, direction=Direction.IDLE)
-        assert self.algo._overshoot(e, origin=5) == 0
+    def test_en_route_same_direction_score(self):
+        """DOWN elevator, DOWN passenger: wait + direct travel, no detour."""
+        e = make_elevator(1, floor=7, direction=Direction.DOWN, destinations={4})
+        p = make_passenger(origin=6, destination=1)
+        # wait=1, direct=5, detour=0 → score=6
+        assert self.algo._score(e, p) == (6, 0)
 
-    def test_no_overshoot_up_no_destinations_beyond(self):
-        e = make_elevator(1, floor=2, direction=Direction.UP, destinations={4})
-        assert self.algo._overshoot(e, origin=5) == 0  # dest 4 < origin 5
+    def test_en_route_opposite_direction_score(self):
+        """DOWN elevator, UP passenger: wait + direct travel + 2x detour floors."""
+        e = make_elevator(1, floor=7, direction=Direction.DOWN, destinations={4})
+        p = make_passenger(origin=6, destination=9)
+        # wait=1, direct=3, detour=6-4=2 → score = 1+3+4 = 8
+        assert self.algo._score(e, p) == (8, 0)
 
-    def test_overshoot_up(self):
-        """Elevator going up with destinations beyond origin."""
+
+# ---------------------------------------------------------------------------
+# NearestCarAlgorithm – detour
+# ---------------------------------------------------------------------------
+
+class TestNearestCarDetour:
+    def setup_method(self):
+        self.cfg = make_config()
+        self.algo = NearestCarAlgorithm(self.cfg)
+
+    def test_no_detour_same_direction_up(self):
         e = make_elevator(1, floor=2, direction=Direction.UP, destinations={5, 8})
-        # origin=5, beyond = {8}, overshoot = 8-5 = 3
-        assert self.algo._overshoot(e, origin=5) == 3
+        p = make_passenger(origin=5, destination=10)
+        assert self.algo._detour(e, p) == 0
 
-    def test_overshoot_down(self):
-        """Elevator going down with destinations below origin."""
+    def test_no_detour_same_direction_down(self):
         e = make_elevator(1, floor=8, direction=Direction.DOWN, destinations={3, 1})
-        # origin=5, beyond = {3, 1}, overshoot = 5-1 = 4
-        assert self.algo._overshoot(e, origin=5) == 4
+        p = make_passenger(origin=5, destination=1)
+        assert self.algo._detour(e, p) == 0
 
-    def test_overshoot_prefers_less_overshoot(self):
-        """When equidistant, the elevator with less overshoot wins."""
-        # Both are at floor 3 going up, target at floor 5.
-        # e1 has no destination beyond 5; e2 has destination at 9.
-        e1 = make_elevator(1, floor=3, direction=Direction.UP, destinations={5})
-        e2 = make_elevator(2, floor=3, direction=Direction.UP, destinations={5, 9})
-        p = make_passenger(origin=5)
-        assert self.algo.pick_elevator_for_passenger(p, [e1, e2]) is e1
+    def test_detour_up_elevator_down_passenger(self):
+        e = make_elevator(1, floor=2, direction=Direction.UP, destinations={5, 8})
+        p = make_passenger(origin=5, destination=1)
+        # beyond={8}, detour=8-5=3
+        assert self.algo._detour(e, p) == 3
+
+    def test_detour_down_elevator_up_passenger(self):
+        e = make_elevator(1, floor=8, direction=Direction.DOWN, destinations={3, 1})
+        p = make_passenger(origin=5, destination=10)
+        # beyond={3,1}, detour=5-1=4
+        assert self.algo._detour(e, p) == 4
 
 
 # ---------------------------------------------------------------------------
